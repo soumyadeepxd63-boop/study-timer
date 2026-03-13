@@ -1,0 +1,956 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>StudyFlow - Pomodoro Timer</title>
+    <link rel="stylesheet" href="style.css">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+</head>
+<body>
+    <div class="app-container" id="appContainer">
+        <!-- Header -->
+        <header class="header">
+            <h1><i class="fas fa-brain"></i> StudyFlow</h1>
+            <div class="header-controls">
+                <button class="mode-toggle" id="modeToggle" title="Toggle Dark Mode">
+                    <i class="fas fa-moon"></i>
+                </button>
+                <button class="focus-mode-btn" id="focusModeBtn" title="Focus Mode">
+                    <i class="fas fa-expand-arrows-alt"></i>
+                </button>
+            </div>
+        </header>
+
+        <!-- Main Timer Section -->
+        <main class="timer-section">
+            <!-- Circular Progress Timer -->
+            <div class="timer-circle-container">
+                <svg class="timer-circle" viewBox="0 0 300 300">
+                    <circle class="timer-bg" cx="150" cy="150" r="135"></circle>
+                    <circle class="timer-progress" cx="150" cy="150" r="135" id="timerProgress"></circle>
+                </svg>
+                <div class="timer-display" id="timerDisplay">25:00</div>
+                <div class="session-type" id="sessionType">Study Session</div>
+            </div>
+
+            <!-- Control Buttons -->
+            <div class="timer-controls">
+                <button class="control-btn start-btn" id="startBtn">
+                    <i class="fas fa-play"></i> Start
+                </button>
+                <button class="control-btn pause-btn" id="pauseBtn" disabled>
+                    <i class="fas fa-pause"></i> Pause
+                </button>
+                <button class="control-btn reset-btn" id="resetBtn">
+                    <i class="fas fa-redo"></i> Reset
+                </button>
+            </div>
+        </main>
+
+        <!-- Settings Panel -->
+        <section class="settings-panel">
+            <div class="settings-group">
+                <label>Study Time (min)</label>
+                <input type="number" id="studyTimeInput" value="25" min="1" max="90">
+            </div>
+            <div class="settings-group">
+                <label>Break Time (min)</label>
+                <input type="number" id="breakTimeInput" value="5" min="1" max="30">
+            </div>
+            <div class="settings-group">
+                <label>Daily Goal (hours)</label>
+                <input type="number" id="dailyGoalInput" value="4" min="1" max="12" step="0.5">
+            </div>
+            <button class="save-settings-btn" id="saveSettingsBtn">
+                <i class="fas fa-save"></i> Save Settings
+            </button>
+        </section>
+
+        <!-- Statistics Section -->
+        <section class="stats-section">
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <div class="stat-number" id="todayStudyTime">0h 0m</div>
+                    <div class="stat-label">Today</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-number" id="sessionsCompleted">0</div>
+                    <div class="stat-label">Sessions</div>
+                </div>
+                <div class="stat-card">
+                    <div class="goal-progress">
+                        <div class="progress-bar">
+                            <div class="progress-fill" id="goalProgressFill"></div>
+                        </div>
+                        <span id="goalProgressText">0%</span>
+                    </div>
+                    <div class="stat-label">Goal Progress</div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Task List -->
+        <section class="tasks-section">
+            <h3><i class="fas fa-tasks"></i> Today's Tasks</h3>
+            <div class="task-input-container">
+                <input type="text" id="taskInput" placeholder="Add a study task...">
+                <button id="addTaskBtn"><i class="fas fa-plus"></i></button>
+            </div>
+            <ul class="task-list" id="taskList"></ul>
+        </section>
+    </div>
+
+    <!-- Focus Mode Overlay -->
+    <div class="focus-overlay" id="focusOverlay">
+        <div class="focus-content">
+            <h2>Stay Focused</h2>
+            <p>You've got this! One session at a time.</p>
+            <button class="exit-focus-btn" id="exitFocusBtn">
+                <i class="fas fa-times"></i>
+            </button>
+        </div>
+    </div>
+
+    <!-- Audio Elements for Notifications -->
+    <audio id="studyEndSound" preload="auto">
+        <source src="data:audio/wav;base64,UklGRnoGAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YQoGAACBhYqFbF1fdJivrJBhNjVgodDbq2EcBj+a2/LDciUFLIHO8tiJNwgZaLvt559NEAxQp+PwtmMcBjiR1/LMeSwFJHfH8N2QQAoUXrTp66hVFApGn+DyvmwhBSq+2/LMeSwFJHfH8N2QQAoUXrTp66hVFApGn+DyvmwhBSq+2/LMeSwFJHfH8N2QQAoUXrTp66hVFApGn+DyvmwhBSq+2/LMeSwFJHfH8N2QQAoUXrTp66hVFApGn+DyvmwhBSq+2/" type="audio/wav">
+    </audio>
+    <audio id="breakEndSound" preload="auto">
+        <source src="data:audio/wav;base64,UklGRp4CAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YQoGAACBhYqFbF1fdJivrJBhNjVgodDbq2EcBj+a2/LDciUFLIHO8tiJNwgZaLvt559NEAxQp+PwtmMcBjiR1/LMeSwFJHfH8N2QQAoUXrTp66hVFApGn+DyvmwhBSq+2/LMeSwFJHfH8N2QQAoUXrTp66hVFApGn+DyvmwhBSq+2/" type="audio/wav">
+    </audio>
+
+    <script src="script.js"></script>
+</body>
+</html>
+/* Reset and Base Styles */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    height: 100vh;
+    overflow: hidden;
+    transition: all 0.3s ease;
+}
+
+/* Light Mode (Default) */
+body.light {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: #333;
+}
+
+/* Dark Mode */
+body.dark {
+    background: linear-gradient(135deg, #0f0f23 0%, #2d1b69 50%, #1a1a2e 100%);
+    color: #e0e0e0;
+}
+
+.app-container {
+    max-width: 400px;
+    margin: 0 auto;
+    padding: 20px;
+    height: 100vh;
+    display: flex;
+    flex-direction: column;
+    overflow-y: auto;
+    padding-bottom: 20px;
+}
+
+/* Header */
+.header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 30px;
+}
+
+.header h1 {
+    font-size: 1.8rem;
+    font-weight: 700;
+    background: linear-gradient(45deg, #fff, rgba(255,255,255,0.8));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+}
+
+.header-controls {
+    display: flex;
+    gap: 10px;
+}
+
+.mode-toggle, .focus-mode-btn {
+    background: rgba(255,255,255,0.2);
+    border: none;
+    border-radius: 50%;
+    width: 45px;
+    height: 45px;
+    color: white;
+    cursor: pointer;
+    backdrop-filter: blur(10px);
+    transition: all 0.3s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.mode-toggle:hover, .focus-mode-btn:hover {
+    background: rgba(255,255,255,0.3);
+    transform: scale(1.1);
+}
+
+/* Timer Section */
+.timer-section {
+    text-align: center;
+    margin-bottom: 30px;
+    flex-shrink: 0;
+}
+
+.timer-circle-container {
+    position: relative;
+    width: 280px;
+    height: 280px;
+    margin: 0 auto 20px;
+}
+
+.timer-circle {
+    width: 100%;
+    height: 100%;
+}
+
+.timer-bg {
+    fill: none;
+    stroke: rgba(255,255,255,0.1);
+    stroke-width: 10;
+}
+
+.timer-progress {
+    fill: none;
+    stroke: #4ade80;
+    stroke-width: 10;
+    stroke-linecap: round;
+    stroke-dasharray: 848;
+    stroke-dashoffset: 848;
+    transition: stroke-dashoffset 0.1s linear;
+}
+
+body.dark .timer-progress {
+    stroke: #22c55e;
+}
+
+.timer-display {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    font-size: 3.5rem;
+    font-weight: 700;
+    color: white;
+    text-shadow: 0 4px 8px rgba(0,0,0,0.3);
+    letter-spacing: 2px;
+}
+
+.session-type {
+    font-size: 1.1rem;
+    font-weight: 500;
+    color: rgba(255,255,255,0.9);
+    margin-top: 10px;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+}
+
+/* Control Buttons */
+.timer-controls {
+    display: flex;
+    gap: 15px;
+    justify-content: center;
+    flex-wrap: wrap;
+}
+
+.control-btn {
+    background: rgba(255,255,255,0.2);
+    border: 2px solid rgba(255,255,255,0.3);
+    border-radius: 50px;
+    padding: 15px 25px;
+    color: white;
+    font-size: 1rem;
+    font-weight: 600;
+    cursor: pointer;
+    backdrop-filter: blur(10px);
+    transition: all 0.3s ease;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    min-width: 100px;
+    justify-content: center;
+}
+
+.control-btn:hover {
+    background: rgba(255,255,255,0.3);
+    transform: translateY(-2px);
+    box-shadow: 0 8px 25px rgba(0,0,0,0.2);
+}
+
+.control-btn:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+    transform: none;
+}
+
+.start-btn {
+    background: linear-gradient(45deg, #4ade80, #22c55e);
+    border-color: #22c55e;
+}
+
+.reset-btn {
+    background: linear-gradient(45deg, #f87171, #ef4444);
+    border-color: #ef4444;
+}
+
+/* Settings Panel */
+.settings-panel {
+    background: rgba(255,255,255,0.1);
+    backdrop-filter: blur(20px);
+    border-radius: 20px;
+    padding: 25px;
+    margin-bottom: 25px;
+    border: 1px solid rgba(255,255,255,0.2);
+}
+
+.settings-group {
+    display: flex;
+    flex-direction: column;
+    margin-bottom: 20px;
+}
+
+.settings-group label {
+    font-weight: 600;
+    margin-bottom: 8px;
+    color: rgba(255,255,255,0.9);
+}
+
+.settings-group input {
+    background: rgba(255,255,255,0.9);
+    border: none;
+    border-radius: 12px;
+    padding: 12px 16px;
+    font-size: 1rem;
+    color: #333;
+    font-weight: 500;
+}
+
+.save-settings-btn {
+    width: 100%;
+    background: linear-gradient(45deg, #3b82f6, #1d4ed8);
+    border: none;
+    border-radius: 12px;
+    padding: 14px;
+    color: white;
+    font-size: 1rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.save-settings-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 10px 30px rgba(59,130,246,0.4);
+}
+
+/* Stats Section */
+.stats-section {
+    margin-bottom: 25px;
+}
+
+.stats-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(100px, 1fr));
+    gap: 20px;
+}
+
+.stat-card {
+    background: rgba(255,255,255,0.1);
+    backdrop-filter: blur(20px);
+    border-radius: 20px;
+    padding: 25px 20px;
+    text-align: center;
+    border: 1px solid rgba(255,255,255,0.2);
+    transition: transform 0.3s ease;
+}
+
+.stat-card:hover {
+    transform: translateY(-5px);
+}
+
+.stat-number {
+    font-size: 2rem;
+    font-weight: 700;
+    color: white;
+    margin-bottom: 5px;
+}
+
+.stat-label {
+    font-size: 0.9rem;
+    color: rgba(255,255,255,0.8);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.goal-progress {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.progress-bar {
+    background: rgba(255,255,255,0.2);
+    height: 8px;
+    border-radius: 4px;
+    overflow: hidden;
+}
+
+.progress-fill {
+    height: 100%;
+    background: linear-gradient(90deg, #4ade80, #22c55e);
+    border-radius: 4px;
+    transition: width 0.5s ease;
+    width: 0%;
+}
+
+#goalProgressText {
+    font-size: 0.9rem;
+    font-weight: 600;
+    color: white;
+}
+
+/* Tasks Section */
+.tasks-section {
+    flex: 1;
+    background: rgba(255,255,255,0.1);
+    backdrop-filter: blur(20px);
+    border-radius: 20px;
+    padding: 25px;
+    border: 1px solid rgba(255,255,255,0.2);
+}
+
+.tasks-section h3 {
+    margin-bottom: 20px;
+    color: rgba(255,255,255,0.9);
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.task-input-container {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 20px;
+}
+
+#taskInput {
+    flex: 1;
+    background: rgba(255,255,255,0.9);
+    border: none;
+    border-radius: 12px;
+    padding: 14px 18px;
+    font-size: 1rem;
+    color: #333;
+}
+
+#taskInput::placeholder {
+    color: #666;
+}
+
+#addTaskBtn {
+    background: linear-gradient(45deg, #3b82f6, #1d4ed8);
+    border: none;
+    border-radius: 12px;
+    width: 50px;
+    color: white;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+#addTaskBtn:hover {
+    transform: scale(1.05);
+}
+
+.task-list {
+    list-style: none;
+    max-height: 300px;
+    overflow-y: auto;
+}
+
+.task-item {
+    background: rgba(255,255,255,0.9);
+    margin-bottom: 12px;
+    border-radius: 12px;
+    padding: 16px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    transition: all 0.3s ease;
+    animation: slideIn 0.3s ease;
+}
+
+@keyframes slideIn {
+    from {
+        opacity: 0;
+        transform: translateX(-20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateX(0);
+    }
+}
+
+.task-item.completed {
+    opacity: 0.7;
+    background: linear-gradient(45deg, #4ade80, #22c55e);
+    color: white;
+}
+
+.task-item.completed .task-text {
+    text-decoration: line-through;
+}
+
+.task-checkbox {
+    width: 20px;
+    height: 20px;
+    accent-color: #3b82f6;
+    cursor: pointer;
+}
+
+.task-text {
+    flex: 1;
+    font-weight: 500;
+}
+
+.task-delete {
+    background: none;
+    border: none;
+    color: #ef4444;
+    font-size: 1.2rem;
+    cursor: pointer;
+    padding: 5px;
+    border-radius: 50%;
+    transition: all 0.3s ease;
+}
+
+.task-delete:hover {
+    background: rgba(239,68,68,0.2);
+    transform: scale(1.2);
+}
+
+/* Focus Mode */
+.focus-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(135deg, #1e3a8a, #3730a3);
+    display: none;
+    align-items: center;
+    justify-content: center;
+    z-index: 1000;
+}
+
+.focus-overlay.active {
+    display: flex;
+}
+
+.focus-content {
+    text-align: center;
+    // StudyFlow Pomodoro Timer - Complete JavaScript Implementation
+class StudyTimer {
+    constructor() {
+        // Timer state
+        this.isRunning = false;
+        this.isStudySession = true;
+        this.currentTime = 25 * 60; // Default 25 minutes in seconds
+        this.originalTime = 25 * 60;
+        this.intervalId = null;
+        
+        // Settings (loaded from localStorage)
+        this.settings = {
+            studyTime: 25,
+            breakTime: 5,
+            dailyGoal: 4 // hours
+        };
+        
+        // Statistics
+        this.stats = {
+            todayStudyTime: 0,
+            sessionsCompleted: 0,
+            startDate: new Date().toDateString()
+        };
+        
+        // Tasks
+        this.tasks = [];
+        
+        // DOM Elements
+        this.elements = {};
+        
+        // Audio
+        this.studyEndSound = document.getElementById('studyEndSound');
+        this.breakEndSound = document.getElementById('breakEndSound');
+        
+        this.init();
+    }
+    
+    init() {
+        this.cacheDOM();
+        this.loadData();
+        this.bindEvents();
+        this.updateDisplay();
+        this.updateStats();
+        this.renderTasks();
+    }
+    
+    cacheDOM() {
+        // Timer elements
+        this.elements.timerDisplay = document.getElementById('timerDisplay');
+        this.elements.timerProgress = document.getElementById('timerProgress');
+        this.elements.sessionType = document.getElementById('sessionType');
+        this.elements.startBtn = document.getElementById('startBtn');
+        this.elements.pauseBtn = document.getElementById('pauseBtn');
+        this.elements.resetBtn = document.getElementById('resetBtn');
+        
+        // Settings
+        this.elements.studyTimeInput = document.getElementById('studyTimeInput');
+        this.elements.breakTimeInput = document.getElementById('breakTimeInput');
+        this.elements.dailyGoalInput = document.getElementById('dailyGoalInput');
+        this.elements.saveSettingsBtn = document.getElementById('saveSettingsBtn');
+        
+        // Stats
+        this.elements.todayStudyTime = document.getElementById('todayStudyTime');
+        this.elements.sessionsCompleted = document.getElementById('sessionsCompleted');
+        this.elements.goalProgressFill = document.getElementById('goalProgressFill');
+        this.elements.goalProgressText = document.getElementById('goalProgressText');
+        
+        // Tasks
+        this.elements.taskInput = document.getElementById('taskInput');
+        this.elements.addTaskBtn = document.getElementById('addTaskBtn');
+        this.elements.taskList = document.getElementById('taskList');
+        
+        // Theme & Focus
+        this.elements.modeToggle = document.getElementById('modeToggle');
+        this.elements.focusModeBtn = document.getElementById('focusModeBtn');
+        this.elements.focusOverlay = document.getElementById('focusOverlay');
+        this.elements.exitFocusBtn = document.getElementById('exitFocusBtn');
+        this.elements.appContainer = document.getElementById('appContainer');
+    }
+    
+    bindEvents() {
+        // Timer controls
+        this.elements.startBtn.addEventListener('click', () => this.startTimer());
+        this.elements.pauseBtn.addEventListener('click', () => this.pauseTimer());
+        this.elements.resetBtn.addEventListener('click', () => this.resetTimer());
+        
+        // Settings
+        this.elements.saveSettingsBtn.addEventListener('click', () => this.saveSettings());
+        this.elements.studyTimeInput.addEventListener('change', () => this.updateCurrentTime(true));
+        this.elements.breakTimeInput.addEventListener('change', () => this.updateCurrentTime(false));
+        
+        // Tasks
+        this.elements.addTaskBtn.addEventListener('click', () => this.addTask());
+        this.elements.taskInput.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') this.addTask();
+        });
+        
+        // Theme & Focus
+        this.elements.modeToggle.addEventListener('click', () => this.toggleDarkMode());
+        this.elements.focusModeBtn.addEventListener('click', () => this.toggleFocusMode());
+        this.elements.exitFocusBtn.addEventListener('click', () => this.toggleFocusMode());
+        
+        // Update stats daily
+        window.addEventListener('beforeunload', () => this.saveData());
+    }
+    
+    // === TIMER LOGIC ===
+    startTimer() {
+        if (this.isRunning) return;
+        
+        this.isRunning = true;
+        this.elements.startBtn.disabled = true;
+        this.elements.pauseBtn.disabled = false;
+        this.elements.resetBtn.disabled = false;
+        
+        this.intervalId = setInterval(() => {
+            this.currentTime--;
+            this.updateDisplay();
+            
+            if (this.currentTime <= 0) {
+                this.sessionComplete();
+            }
+        }, 1000);
+    }
+    
+    pauseTimer() {
+        if (!this.isRunning) return;
+        
+        this.isRunning = false;
+        clearInterval(this.intervalId);
+        this.elements.startBtn.disabled = false;
+        this.elements.pauseBtn.disabled = true;
+    }
+    
+    resetTimer() {
+        this.pauseTimer();
+        this.isStudySession = true;
+        this.currentTime = this.originalTime;
+        this.updateDisplay();
+    }
+    
+    sessionComplete() {
+        clearInterval(this.intervalId);
+        this.isRunning = false;
+        
+        if (this.isStudySession) {
+            // Study session completed
+            this.stats.todayStudyTime += (this.settings.studyTime * 60);
+            this.stats.sessionsCompleted++;
+            this.playSound(this.studyEndSound);
+            this.switchToBreak();
+        } else {
+            // Break session completed
+            this.playSound(this.breakEndSound);
+            this.switchToStudy();
+        }
+        
+        this.elements.startBtn.disabled = false;
+        this.elements.pauseBtn.disabled = true;
+        
+        this.updateStats();
+        this.saveData();
+    }
+    
+    switchToBreak() {
+        this.isStudySession = false;
+        this.originalTime = this.settings.breakTime * 60;
+        this.currentTime = this.originalTime;
+        this.elements.sessionType.textContent = 'Break Time';
+        this.updateDisplay();
+    }
+    
+    switchToStudy() {
+        this.isStudySession = true;
+        this.originalTime = this.settings.studyTime * 60;
+        this.currentTime = this.originalTime;
+        this.elements.sessionType.textContent = 'Study Session';
+        this.updateDisplay();
+    }
+    
+    updateCurrentTime(isStudy) {
+        const minutes = parseInt(isStudy ? 
+            this.elements.studyTimeInput.value : 
+            this.elements.breakTimeInput.value
+        );
+        
+        if (this.isStudySession === isStudy && !this.isRunning) {
+            this.originalTime = minutes * 60;
+            this.currentTime = this.originalTime;
+            this.updateDisplay();
+        }
+    }
+    
+    updateDisplay() {
+        const minutes = Math.floor(this.currentTime / 60);
+        const seconds = this.currentTime % 60;
+        this.elements.timerDisplay.textContent = 
+            `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+        
+        // Update circular progress
+        const progress = ((this.originalTime - this.currentTime) / this.originalTime) * 848;
+        this.elements.timerProgress.style.strokeDashoffset = 848 - progress;
+        
+        // Color change for break
+        if (!this.isStudySession) {
+            this.elements.timerProgress.style.stroke = '#f59e0b';
+        } else {
+            this.elements.timerProgress.style.stroke = '#4ade80';
+        }
+    }
+    
+    // === SETTINGS ===
+    saveSettings() {
+        this.settings.studyTime = parseInt(this.elements.studyTimeInput.value);
+        this.settings.breakTime = parseInt(this.elements.breakTimeInput.value);
+        this.settings.dailyGoal = parseFloat(this.elements.dailyGoalInput.value);
+        
+        // Update current timer if not running
+        if (!this.isRunning) {
+            this.originalTime = this.isStudySession ? 
+                this.settings.studyTime * 60 : 
+                this.settings.breakTime * 60;
+            this.currentTime = this.originalTime;
+            this.updateDisplay();
+        }
+        
+        this.saveData();
+        this.showNotification('Settings saved!');
+    }
+    
+    // === STATISTICS ===
+    updateStats() {
+        // Update today study time
+        const hours = Math.floor(this.stats.todayStudyTime / 3600);
+        const minutes = Math.floor((this.stats.todayStudyTime % 3600) / 60);
+        this.elements.todayStudyTime.textContent = `${hours}h ${minutes}m`;
+        
+        // Update sessions
+        this.elements.sessionsCompleted.textContent = this.stats.sessionsCompleted;
+        
+        // Update goal progress
+        const goalSeconds = this.settings.dailyGoal * 3600;
+        const progress = Math.min((this.stats.todayStudyTime / goalSeconds) * 100, 100);
+        this.elements.goalProgressFill.style.width = `${progress}%`;
+        this.elements.goalProgressText.textContent = `${Math.round(progress)}%`;
+    }
+    
+    // === TASKS ===
+    addTask() {
+        const text = this.elements.taskInput.value.trim();
+        if (!text) return;
+        
+        this.tasks.unshift({
+            id: Date.now(),
+            text: text,
+            completed: false
+        });
+        
+        this.elements.taskInput.value = '';
+        this.renderTasks();
+        this.saveData();
+    }
+    
+    toggleTask(id) {
+        this.tasks = this.tasks.map(task => 
+            task.id === id ? { ...task, completed: !task.completed } : task
+        );
+        this.renderTasks();
+        this.saveData();
+    }
+    
+    deleteTask(id) {
+        this.tasks = this.tasks.filter(task => task.id !== id);
+        this.renderTasks();
+        this.saveData();
+    }
+    
+    renderTasks() {
+        this.elements.taskList.innerHTML = this.tasks.map(task => `
+            <li class="task-item ${task.completed ? 'completed' : ''}">
+                <input type="checkbox" class="task-checkbox" 
+                       ${task.completed ? 'checked' : ''} 
+                       onchange="timer.toggleTask(${task.id})">
+                <span class="task-text">${task.text}</span>
+                <button class="task-delete" onclick="timer.deleteTask(${task.id})">
+                    <i class="fas fa-trash"></i>
+                </button>
+            </li>
+        `).join('');
+    }
+    
+    // === THEME & FOCUS MODE ===
+    toggleDarkMode() {
+        document.body.classList.toggle('dark');
+        const isDark = document.body.classList.contains('dark');
+        this.elements.modeToggle.innerHTML = isDark ? 
+            '<i class="fas fa-sun"></i>' : 
+            '<i class="fas fa-moon"></i>';
+        localStorage.setItem('darkMode', isDark);
+    }
+    
+    toggleFocusMode() {
+        this.elements.focusOverlay.classList.toggle('active');
+        this.elements.appContainer.style.display = this.elements.focusOverlay.classList.contains('active') ? 
+            'none' : 'flex';
+        
+        if (document.fullscreenElement) {
+            document.exitFullscreen();
+        } else {
+            this.elements.appContainer.requestFullscreen().catch(() => {});
+        }
+    }
+    
+    // === AUDIO NOTIFICATIONS ===
+    playSound(sound) {
+        sound.currentTime = 0;
+        sound.play().catch(e => console.log('Audio play failed:', e));
+    }
+    
+    showNotification(message) {
+        // Simple visual feedback
+        const btn = document.querySelector('.save-settings-btn');
+        const originalText = btn.innerHTML;
+        btn.innerHTML = '<i class="fas fa-check"></i> Saved!';
+        btn.style.background = 'linear-gradient(45deg, #10b981, #059669)';
+        
+        setTimeout(() => {
+            btn.innerHTML = originalText;
+            btn.style.background = '';
+        }, 1500);
+    }
+    
+    // === LOCAL STORAGE ===
+    loadData() {
+        const savedSettings = localStorage.getItem('studyTimerSettings');
+        const savedStats = localStorage.getItem('studyTimerStats');
+        const savedTasks = localStorage.getItem('studyTimerTasks');
+        const darkMode = localStorage.getItem('darkMode');
+        
+        if (savedSettings) {
+            this.settings = { ...this.settings, ...JSON.parse(savedSettings) };
+        }
+        
+        if (savedStats) {
+            const stats = JSON.parse(savedStats);
+            // Reset stats if new day
+            if (stats.startDate !== new Date().toDateString()) {
+                this.stats = { todayStudyTime: 0, sessionsCompleted: 0, startDate: new Date().toDateString() };
+            } else {
+                this.stats = stats;
+            }
+        }
+        
+        if (savedTasks) {
+            this.tasks = JSON.parse(savedTasks);
+        }
+        
+        // Apply settings to inputs
+        this.elements.studyTimeInput.value = this.settings.studyTime;
+        this.elements.breakTimeInput.value = this.settings.breakTime;
+        this.elements.dailyGoalInput.value = this.settings.dailyGoal;
+        
+        // Set initial timer
+        this.originalTime = this.settings.studyTime * 60;
+        this.currentTime = this.originalTime;
+        
+        // Apply dark mode
+        if (darkMode === 'true') {
+            document.body.classList.add('dark');
+            this.elements.modeToggle.innerHTML = '<i class="fas fa-sun"></i>';
+        }
+        
+        this.updateDisplay();
+        this.updateStats();
+        this.renderTasks();
+    }
+    
+    saveData() {
+        localStorage.setItem('studyTimerSettings', JSON.stringify(this.settings));
+        localStorage.setItem('studyTimerStats', JSON.stringify(this.stats));
+        localStorage.setItem('studyTimerTasks', JSON.stringify(this.tasks));
+    }
+}
+
+// Global timer instance
+const timer = new StudyTimer();
+
+// Make timer globally accessible for task event handlers
+window.timer = timer;
